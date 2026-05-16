@@ -60,3 +60,5 @@ If you need any support, please [create an issue](https://github.com/ytang/welly
 
 Welly is a third-party client that conforms to standard network protocols. Welly is not related to any BBS site.
 
+## Unicode support
+in progress
