@@ -11,6 +11,8 @@
 #import "WLTerminal.h"
 #import "WLGlobalConfig.h"
 #import "WLConnection.h"
+#import "WLSite.h"
+#import "WLEncoder.h"
 
 #pragma mark -
 #pragma mark Constant Define
@@ -172,9 +174,46 @@ if (_cursorX <= _column - 1) { \
     _grid[_cursorY][_cursorX].attr.f.underline = _underline; \
     _grid[_cursorY][_cursorX].attr.f.blink = _blink; \
     _grid[_cursorY][_cursorX].attr.f.reverse = _reverse; \
+    _grid[_cursorY][_cursorX].attr.f.doubleByte = 0; \
     _grid[_cursorY][_cursorX].attr.f.url = NO; \
     [_terminal setDirty:YES atRow:_cursorY column:_cursorX]; \
     _cursorX++; \
+}
+
+#define SET_GRID_UNICODE(ch) \
+if (_cursorX <= _column - 2) { \
+    _grid[_cursorY][_cursorX].byte = (ch) >> 8; \
+    _grid[_cursorY][_cursorX].attr.f.fgColor = _fgColor; \
+    _grid[_cursorY][_cursorX].attr.f.bgColor = _bgColor; \
+    _grid[_cursorY][_cursorX].attr.f.bold = _bold; \
+    _grid[_cursorY][_cursorX].attr.f.underline = _underline; \
+    _grid[_cursorY][_cursorX].attr.f.blink = _blink; \
+    _grid[_cursorY][_cursorX].attr.f.reverse = _reverse; \
+    _grid[_cursorY][_cursorX].attr.f.doubleByte = 1; \
+    _grid[_cursorY][_cursorX].attr.f.url = NO; \
+    [_terminal setDirty:YES atRow:_cursorY column:_cursorX]; \
+    _cursorX++; \
+    _grid[_cursorY][_cursorX].byte = (ch) & 0xFF; \
+    _grid[_cursorY][_cursorX].attr.f.fgColor = _fgColor; \
+    _grid[_cursorY][_cursorX].attr.f.bgColor = _bgColor; \
+    _grid[_cursorY][_cursorX].attr.f.bold = _bold; \
+    _grid[_cursorY][_cursorX].attr.f.underline = _underline; \
+    _grid[_cursorY][_cursorX].attr.f.blink = _blink; \
+    _grid[_cursorY][_cursorX].attr.f.reverse = _reverse; \
+    _grid[_cursorY][_cursorX].attr.f.doubleByte = 2; \
+    _grid[_cursorY][_cursorX].attr.f.url = NO; \
+    [_terminal setDirty:YES atRow:_cursorY column:_cursorX]; \
+    _cursorX++; \
+}
+
+static unichar decodeUTF8(const unsigned char *buf, NSInteger len) {
+    unichar ch = 0;
+    if (len == 2) {
+        ch = ((buf[0] & 0x1F) << 6) | (buf[1] & 0x3F);
+    } else if (len == 3) {
+        ch = ((buf[0] & 0x0F) << 12) | ((buf[1] & 0x3F) << 6) | (buf[2] & 0x3F);
+    }
+    return ch;
 }
 
 BOOL isC0Control(unsigned char c) { return (c <= 0x1F); }
@@ -215,6 +254,8 @@ static unsigned short gEmptyAttr;
         _modeLNM = YES;
         _modeIRM = NO;
         _emustd = VT102;
+        _utf8Len = 0;
+        _utf8Expected = 0;
         _grid = (cell **) malloc(sizeof(cell *) * _row);
         int i;
         for (i = 0; i < _row; i++) {
@@ -249,18 +290,40 @@ static unsigned short gEmptyAttr;
         
         NSInteger i, x;
         unsigned char c;
-        
+
         if (_terminal.bbsType == WLFirebird) {
             _hasNewMessage = NO;
         }
-        
+
+        WLEncoding encoding = _terminal.encoding;
+
         for (i = 0; i < len; i++) {
             c = ((const char *)bytes)[i];
             //        if (c == 0x00) continue;
-            
+
             switch (_state)
             {
                 case TP_NORMAL:
+                    // Handle UTF-8 multi-byte accumulation
+                    if (encoding == WLUTF8Encoding && _utf8Expected > 0) {
+                        if ((c & 0xC0) == 0x80) {
+                            _utf8Buf[_utf8Len++] = c;
+                            if (_utf8Len == _utf8Expected) {
+                                unichar ch = decodeUTF8(_utf8Buf, _utf8Len);
+                                _utf8Expected = 0;
+                                if (ch > 0xFF) {
+                                    SET_GRID_UNICODE(ch);
+                                } else if (ch > 0) {
+                                    SET_GRID_BYTE((unsigned char)ch);
+                                }
+                            }
+                            break;
+                        } else {
+                            // Invalid continuation, reset and fall through
+                            _utf8Expected = 0;
+                        }
+                    }
+
                     if (NO) {	// Code alignment
                     } else if (c == ASC_NUL) { // do nothing
                     } else if (c == ASC_ETX) { // FLOW CONTROL? do nothing
@@ -332,6 +395,11 @@ static unsigned short gEmptyAttr;
                     } else if (c == ASC_US ) { // ^_
                         // 0x20 ~ 0x7E ascii readible bytes... (btw Big5 second byte 0x40 ~ 0x7E)
                     } else if (c == ASC_DEL) { // Ignored on input; not stored
+                    } else if (encoding == WLUTF8Encoding && c >= 0xC0) {
+                        // Start UTF-8 multi-byte sequence
+                        _utf8Expected = (c >= 0xF0) ? 4 : (c >= 0xE0) ? 3 : 2;
+                        _utf8Buf[0] = c;
+                        _utf8Len = 1;
                     } else {
                         SET_GRID_BYTE(c);
                     }

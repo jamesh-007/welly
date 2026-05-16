@@ -218,6 +218,9 @@
 /* Class = "NSMenuItem"; title = "Simplified Chinese (GBK)"; ObjectID = "843"; */
 "843.title" = "簡體中文（GBK）";
 
+/* Class = "NSMenuItem"; title = "Unicode (UTF-8)"; ObjectID = "1670"; */
+"1670.title" = "Unicode（UTF-8）";
+
 /* Class = "NSMenuItem"; title = "Cut"; ObjectID = "883"; */
 "883.title" = "剪下";
 

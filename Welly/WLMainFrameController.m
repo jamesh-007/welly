@@ -121,6 +121,8 @@ SYNTHESIZE_SINGLETON_FOR_CLASS(WLMainFrameController)
         [m itemAtIndex:1].state = NSOnState;
     if (currentEncoding == WLGBKEncoding)
         [m itemAtIndex:0].state = NSOnState;
+    if (currentEncoding == WLUTF8Encoding)
+        [m itemAtIndex:2].state = NSOnState;
 }
 
 - (void)updateSitesMenuWithSites:(NSArray *)sites {
@@ -320,6 +322,8 @@ SYNTHESIZE_SINGLETON_FOR_CLASS(WLMainFrameController)
             encoding = WLGBKEncoding;
         if ([[sender title] rangeOfString:@"Big5"].location != NSNotFound)
             encoding = WLBig5Encoding;
+        if ([[sender title] rangeOfString:@"UTF-8"].location != NSNotFound)
+            encoding = WLUTF8Encoding;
         
         _tabView.frontMostConnection.site.encoding = encoding;
         [[NSNotificationCenter defaultCenter] postNotificationName:WLNotificationSiteDidChangeEncoding 

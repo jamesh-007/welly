@@ -31,7 +31,12 @@
     cell **_grid;
     
     enum { TP_NORMAL, TP_ESCAPE, TP_CONTROL, TP_SCS } _state;
-    
+
+    // UTF-8 multi-byte accumulation
+    unsigned char _utf8Buf[4];
+    NSInteger _utf8Len;
+    NSInteger _utf8Expected;
+
     WLIntegerArray *_csBuf;
     WLIntegerArray *_csArg;
     NSInteger _csTemp;

@@ -35,6 +35,9 @@ unsigned char encodingCodeToRightByte(unsigned short code) {
 }
 
 void convertToUTF8(cell *buffer, NSInteger bufferLength, WLEncoding encoding) {
+    if (encoding == WLUTF8Encoding) {
+        return; // Already Unicode in cells
+    }
     for (NSInteger i = 0; i < bufferLength; ++i) {
         if (buffer[i].attr.f.doubleByte == 1) {
             unsigned short code = doubleByteToEncodingCode(buffer[i].byte, buffer[i+1].byte);
@@ -47,6 +50,9 @@ void convertToUTF8(cell *buffer, NSInteger bufferLength, WLEncoding encoding) {
 }
 
 void convertFromUTF8(cell *buffer, NSInteger bufferLength, WLEncoding encoding) {
+    if (encoding == WLUTF8Encoding) {
+        return; // Already Unicode in cells
+    }
     for (NSInteger i = 0; i < bufferLength; ++i) {
         if (buffer[i].attr.f.doubleByte == 1) {
             unsigned short code = doubleByteToEncodingCode(buffer[i].byte, buffer[i+1].byte) + 0x8000;

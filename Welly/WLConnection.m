@@ -163,12 +163,31 @@
         WLEncoding encoding = _site.encoding;
         for (int i = 0; i < s.length; i++) {
             unichar ch = [s characterAtIndex:i];
-            char buf[2];
             if (ch < 0x007F) {
+                char buf[1];
                 buf[0] = ch;
                 [data appendBytes:buf length:1];
+            } else if (encoding == WLUTF8Encoding) {
+                // Encode Unicode character to UTF-8 bytes
+                char buf[4];
+                int len = 0;
+                if (ch < 0x0080) {
+                    buf[0] = ch;
+                    len = 1;
+                } else if (ch < 0x0800) {
+                    buf[0] = 0xC0 | (ch >> 6);
+                    buf[1] = 0x80 | (ch & 0x3F);
+                    len = 2;
+                } else {
+                    buf[0] = 0xE0 | (ch >> 12);
+                    buf[1] = 0x80 | ((ch >> 6) & 0x3F);
+                    buf[2] = 0x80 | (ch & 0x3F);
+                    len = 3;
+                }
+                [data appendBytes:buf length:len];
             } else {
                 unichar code = [WLEncoder fromUnicode:ch encoding:encoding];
+                char buf[2];
                 if (code != 0) {
                     buf[0] = code >> 8;
                     buf[1] = code & 0xFF;

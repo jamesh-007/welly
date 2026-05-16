@@ -181,11 +181,16 @@ const NSNotificationName WLTerminalBBSStateDidChangeNotification = @"WLTerminalB
         } else if (db == 1) {
             firstByte = _grid[y][x].byte;
         } else if (db == 2 && firstByte) {
-            int index = (firstByte << 8) + _grid[y][x].byte - 0x8000;
             for (j = 0; j < spacebuf; j++)
             _textBuf[bufLength++] = ' ';
-            _textBuf[bufLength++] = [WLEncoder toUnicode:index encoding:self.connection.site.encoding];
-            
+            if (self.connection.site.encoding == WLUTF8Encoding) {
+                // UTF-8: cells store Unicode codepoint bytes directly
+                _textBuf[bufLength++] = (firstByte << 8) | _grid[y][x].byte;
+            } else {
+                int index = (firstByte << 8) + _grid[y][x].byte - 0x8000;
+                _textBuf[bufLength++] = [WLEncoder toUnicode:index encoding:self.connection.site.encoding];
+            }
+
             spacebuf = 0;
         }
     }
@@ -252,6 +257,10 @@ const NSNotificationName WLTerminalBBSStateDidChangeNotification = @"WLTerminalB
 # pragma mark -
 # pragma mark Update State
 - (void)updateDoubleByteStateForRow:(NSInteger)r {
+    // For UTF-8, the feeder already sets doubleByte state correctly
+    if (self.connection.site.encoding == WLUTF8Encoding) {
+        return;
+    }
     cell *currRow = _grid[r];
     int db = 0;
     BOOL isDirty = NO;
@@ -390,6 +399,7 @@ inline static BOOL hasAnyString(NSString *row, NSArray *array) {
     // FIXME: BBS type is temoprarily determined by the ansi color key.
     // remove #import "YLSite.h" when fixed.
     self.bbsType = _connection.site.encoding == WLBig5Encoding ? WLMaple : WLFirebird;
+    // UTF-8 sites default to Firebird BBS type
 }
 
 #pragma mark -

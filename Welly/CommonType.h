@@ -143,6 +143,7 @@ BOOL isSpecialSymbol(unichar ch);
 
 #define titleBig5 @"SetEncodingBig5"
 #define titleGBK @"SetEncodingGBK"
+#define titleUTF8 @"SetEncodingUTF8"
 
 enum {
     WLWhitespaceCharacter = ' ',

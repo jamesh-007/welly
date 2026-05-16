@@ -415,9 +415,15 @@ static NSImage *gLeftImage;
         } else if (db == 1) {
             continue;
         } else if (db == 2) {
-            unsigned short code = (((currRow + x - 1)->byte) << 8) + ((currRow + x)->byte) - 0x8000;
-            unichar ch = [WLEncoder toUnicode:code
-                                     encoding:(self.frontMostConnection.site).encoding];
+            unichar ch;
+            if ((self.frontMostConnection.site).encoding == WLUTF8Encoding) {
+                // UTF-8: cells store Unicode codepoint bytes directly
+                ch = (((currRow + x - 1)->byte) << 8) | ((currRow + x)->byte);
+            } else {
+                unsigned short code = (((currRow + x - 1)->byte) << 8) + ((currRow + x)->byte) - 0x8000;
+                ch = [WLEncoder toUnicode:code
+                                 encoding:(self.frontMostConnection.site).encoding];
+            }
             
             if ([WLAsciiArtRender isAsciiArtSymbol:ch]
                 && !(gConfig.showsHiddenText					// If the user desires anti-hidden

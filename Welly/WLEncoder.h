@@ -19,6 +19,7 @@
 typedef NS_ENUM(NSUInteger, WLEncoding) {
     WLGBKEncoding = 0,
     WLBig5Encoding = 1,
+    WLUTF8Encoding = 2,
 };
 
 @interface WLEncoder : NSObject

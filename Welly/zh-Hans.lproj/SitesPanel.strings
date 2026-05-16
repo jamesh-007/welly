@@ -62,6 +62,9 @@
 /* Class = "NSMenuItem"; title = "Simplified Chinese (GBK)"; ObjectID = "55"; */
 "55.title" = "简体中文（GBK）";
 
+/* Class = "NSMenuItem"; title = "Unicode (UTF-8)"; ObjectID = "130"; */
+"130.title" = "Unicode（UTF-8）";
+
 /* Class = "NSTextFieldCell"; title = "Proxy:"; ObjectID = "56"; */
 "56.title" = "代理服务器：";
 

@@ -239,6 +239,12 @@
                                                 <action selector="setEncoding:" target="207" id="851"/>
                                             </connections>
                                         </menuItem>
+                                        <menuItem title="Unicode (UTF-8)" id="1670">
+                                            <attributedString key="attributedTitle"/>
+                                            <connections>
+                                                <action selector="setEncoding:" target="207" id="1671"/>
+                                            </connections>
+                                        </menuItem>
                                     </items>
                                 </menu>
                             </menuItem>

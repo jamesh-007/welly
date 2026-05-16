@@ -270,6 +270,9 @@ wss://[id@]example.com[:port][/bbs]</string>
                                                                     <menuItem title="Traditional Chinese (Big5)" id="54">
                                                                         <attributedString key="attributedTitle"/>
                                                                     </menuItem>
+                                                                    <menuItem title="Unicode (UTF-8)" id="130">
+                                                                        <attributedString key="attributedTitle"/>
+                                                                    </menuItem>
                                                                 </items>
                                                             </menu>
                                                         </popUpButtonCell>
